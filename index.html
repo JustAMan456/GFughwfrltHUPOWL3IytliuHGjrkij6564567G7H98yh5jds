@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>luadef | GameSense Lua</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --panel: rgba(255, 255, 255, 0.05);
+      --panel-2: rgba(255, 255, 255, 0.08);
+      --line: rgba(141, 255, 0, 0.14);
+      --green: #9aff00;
+      --green-2: #65ff4d;
+      --text: #f5f5f5;
+      --muted: #a2a2a2;
+      --shadow: 0 0 55px rgba(154, 255, 0, 0.55);
+      --radius: 28px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at center, rgba(154,255,0,0.14), transparent 42%), #000;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(154,255,0,0.13), transparent 22%),
+        radial-gradient(circle at 80% 15%, rgba(101,255,77,0.10), transparent 18%),
+        radial-gradient(circle at 70% 80%, rgba(154,255,0,0.12), transparent 24%);
+      filter: blur(12px);
+      z-index: 0;
+    }
+
+    #fx {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: .75;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 2;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 18px 42px;
+      backdrop-filter: blur(20px);
+      background: rgba(0,0,0,0.40);
+      border-bottom: 1px solid rgba(154,255,0,0.10);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand img {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(154,255,0,0.25);
+    }
+
+    .brand-title {
+      font-size: 26px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      margin: 0;
+    }
+
+    .brand-sub {
+      margin: 4px 0 0;
+      color: var(--green);
+      font-size: 11px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      font-size: 12px;
+      color: #c7c7c7;
+    }
+
+    .nav-links a {
+      color: inherit;
+      text-decoration: none;
+      transition: .25s ease;
+    }
+    .nav-links a:hover { color: var(--green); }
+
+    .hero {
+      min-height: calc(100vh - 90px);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 72px 22px 70px;
+      position: relative;
+    }
+
+    .orb {
+      position: absolute;
+      width: min(860px, 92vw);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid rgba(154,255,0,0.12);
+      box-shadow: inset 0 0 65px rgba(154,255,0,0.08), 0 0 140px rgba(154,255,0,0.10);
+      filter: blur(.2px);
+    }
+
+    .orb::before,
+    .orb::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      border: 1px solid rgba(154,255,0,0.08);
+    }
+    .orb::after { inset: 52px; }
+
+    .hero-content {
+      position: relative;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .hero-logo {
+      width: min(240px, 55vw);
+      display: block;
+      margin: 0 auto 26px;
+      border-radius: 26px;
+      box-shadow: 0 0 70px rgba(154,255,0,0.55);
+      filter: drop-shadow(0 0 28px rgba(154,255,0,0.55));
+      transform: translateY(0);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(3rem, 7vw, 6.6rem);
+      line-height: 0.96;
+      letter-spacing: -0.045em;
+      font-weight: 950;
+      text-wrap: balance;
+    }
+
+    .line-1 { color: #fff; }
+    .line-2 { color: #d7d7d7; }
+    .line-3 {
+      background: linear-gradient(90deg, #d4ff87, var(--green), var(--green-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 30px rgba(154,255,0,0.35);
+    }
+
+    .subtitle {
+      margin: 28px auto 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.45vw, 1.2rem);
+      line-height: 1.8;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 38px;
+    }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      text-decoration: none;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 900;
+      border-radius: 18px;
+      padding: 16px 28px;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 180px;
+    }
+
+    .btn-primary {
+      color: #000;
+      background: linear-gradient(135deg, #dcff9a, var(--green));
+      box-shadow: var(--shadow);
+    }
+    .btn-primary:hover { transform: translateY(-2px) scale(1.03); }
+
+    .btn-secondary {
+      color: #fff;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(154,255,0,0.22);
+      backdrop-filter: blur(14px);
+    }
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      border-color: rgba(154,255,0,0.60);
+      background: rgba(154,255,0,0.08);
+    }
+
+    .section {
+      padding: 0 22px 90px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius);
+      padding: 28px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+      border: 1px solid rgba(154,255,0,0.12);
+      backdrop-filter: blur(18px);
+      min-height: 220px;
+      transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(154,255,0,0.45);
+      box-shadow: 0 0 0 1px rgba(154,255,0,0.10), 0 0 50px rgba(154,255,0,0.12);
+    }
+
+    .badge {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      margin-bottom: 18px;
+      color: #cdfc7b;
+      background: rgba(154,255,0,0.12);
+      border: 1px solid rgba(154,255,0,0.18);
+      box-shadow: 0 0 32px rgba(154,255,0,0.16);
+      font-size: 22px;
+    }
+
+    .card h3 {
+      margin: 0 0 12px;
+      font-size: 1.55rem;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 1.03rem;
+    }
+
+    .showcase {
+      margin-top: 26px;
+      border-radius: 34px;
+      overflow: hidden;
+      border: 1px solid rgba(154,255,0,0.16);
+      background: linear-gradient(135deg, rgba(154,255,0,0.10), rgba(255,255,255,0.04));
+      backdrop-filter: blur(20px);
+      padding: 34px;
+      position: relative;
+    }
+
+    .showcase::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(154,255,0,0.16), transparent 35%);
+      pointer-events: none;
+    }
+
+    .showcase-inner {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: .35em;
+      font-size: .78rem;
+      font-weight: 800;
+    }
+
+    .showcase h2 {
+      margin: 18px 0 0;
+      font-size: clamp(2.5rem, 5vw, 4.8rem);
+      line-height: .98;
+      letter-spacing: -.05em;
+    }
+
+    .showcase h2 span { color: var(--green); }
+
+    .showcase p {
+      margin: 22px 0 0;
+      max-width: 620px;
+      color: var(--muted);
+      line-height: 1.85;
+      font-size: 1.05rem;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .chip {
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(154,255,0,0.20);
+      background: rgba(0,0,0,0.36);
+      color: #d7ff9c;
+      font-weight: 700;
+    }
+
+    .showcase-art {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 320px;
+    }
+
+    .glow {
+      position: absolute;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: rgba(154,255,0,0.18);
+      filter: blur(95px);
+    }
+
+    .showcase-art img {
+      position: relative;
+      width: min(360px, 75vw);
+      border-radius: 26px;
+      border: 1px solid rgba(154,255,0,0.18);
+      box-shadow: 0 0 90px rgba(154,255,0,0.34);
+    }
+
+    footer {
+      padding: 20px 22px 70px;
+      text-align: center;
+      border-top: 1px solid rgba(154,255,0,0.10);
+      background: rgba(0,0,0,0.22);
+      backdrop-filter: blur(12px);
+    }
+
+    footer h2 {
+      margin: 0 auto;
+      max-width: 900px;
+      font-size: clamp(2.4rem, 5vw, 4.8rem);
+      line-height: .98;
+      letter-spacing: -.05em;
+    }
+
+    footer h2 span { color: var(--green); }
+    footer p { margin: 18px 0 0; color: var(--muted); }
+
+    .cursor-glow {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(154,255,0,0.17), rgba(154,255,0,0.05) 38%, transparent 70%);
+      transform: translate(-50%, -50%);
+      filter: blur(6px);
+      z-index: 1;
+      opacity: .55;
+      mix-blend-mode: screen;
+    }
+
+    @media (max-width: 980px) {
+      .nav { padding: 16px 18px; }
+      .nav-links { display: none; }
+      .grid, .showcase-inner { grid-template-columns: 1fr; }
+      .showcase { padding: 24px; }
+    }
+
+    @media (max-width: 640px) {
+      .hero { padding-top: 52px; }
+      .hero-logo { width: 42vw; min-width: 160px; }
+      .btn { width: 100%; }
+      .actions { width: 100%; }
+      .card { padding: 22px; }
+      .nav { border-bottom-color: rgba(154,255,0,0.16); }
+      .brand img { width: 48px; height: 48px; border-radius: 15px; }
+      .brand-title { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="fx"></canvas>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <div class="wrap">
+    <header class="nav">
+      <a class="brand" href="#top" aria-label="luadef home">
+        <img src="logo.png" alt="luadef logo" />
+        <div>
+          <p class="brand-title">luadef</p>
+          <p class="brand-sub">gamesense</p>
+        </div>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#showcase">Showcase</a>
+        <a href="#download">Get</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="orb" aria-hidden="true"></div>
+
+        <div class="hero-content">
+          <img class="hero-logo" src="logo.png" alt="luadef logo" />
+          <h1>
+            <span class="line-1">Improve your cheat.</span><br />
+            <span class="line-2">Improve yourself.</span><br />
+            <span class="line-3">Get luadef</span>
+          </h1>
+          <p class="subtitle">
+            Premium quality GameSense Lua experience for CS:GO with the best bruteforce (resolver)
+          </p>
+
+          <div class="actions" id="download">
+            <a class="btn btn-primary" href="https://discord.gg/VsNm4xrxYW" target="_blank" rel="noopener noreferrer">Get Lua</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="grid">
+          <article class="card">
+            <div class="badge">✦</div>
+            <h3>Advanced Rage</h3>
+            <p>Adaptive logic, aggressive behavior, and full control of resolving.</p>
+          </article>
+
+          <article class="card">
+            <div class="badge">◈</div>
+            <h3>Visuals</h3>
+            <p>Clan-Tag spam, separate window in Gamesense menu. Most of Luas don't have it :).</p>
+          </article>
+
+          <article class="card">
+            <div class="badge">◆</div>
+            <h3>Elite Performance</h3>
+            <p>Optimized for all Anti-Aims, and the most moder and updatable Lua.</p>
+          </article>
+        </div>
+
+        <div class="showcase" id="showcase">
+          <div class="showcase-inner">
+            <div>
+              <div class="eyebrow">Luadef Ecosystem</div>
+              <h2>Created for <span>GameSense</span> users.</h2>
+              <p>
+                A next-generation Lua for Gamesense in CS:GO.
+              </p>
+
+              <div class="chips">
+                <div class="chip">GameSense API</div>
+                <div class="chip">CS:GO Ready</div>
+                <div class="chip">Premium Quality</div>
+              </div>
+            </div>
+
+            <div class="showcase-art">
+              <div class="glow" aria-hidden="true"></div>
+              <img src="image.png" alt="luadef showcase logo" />
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <h2>Dominate every round with <span>luadef</span></h2>
+      <p>Futuristic design. Maximum control. Elite performance.</p>
+      <div class="actions" style="margin-top: 26px;">
+        <a class="btn btn-primary" href="https://discord.gg/VsNm4xrxYW" target="_blank" rel="noopener noreferrer">Get Lua</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('fx');
+    const ctx = canvas.getContext('2d');
+    const cursorGlow = document.getElementById('cursorGlow');
+
+    let w, h, particles;
+
+    function resize() {
+      w = canvas.width = window.innerWidth * devicePixelRatio;
+      h = canvas.height = window.innerHeight * devicePixelRatio;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      initParticles();
+    }
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function initParticles() {
+      const count = Math.min(150, Math.floor(window.innerWidth / 10));
+      particles = Array.from({ length: count }, () => ({
+        x: rand(0, w),
+        y: rand(0, h),
+        r: rand(0.6, 2.2) * devicePixelRatio,
+        vx: rand(-0.18, 0.18) * devicePixelRatio,
+        vy: rand(-0.1, 0.22) * devicePixelRatio,
+        a: rand(0.25, 0.95)
+      }));
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+
+      const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.min(w, h) * 0.34);
+      grad.addColorStop(0, 'rgba(154,255,0,0.16)');
+      grad.addColorStop(0.45, 'rgba(154,255,0,0.05)');
+      grad.addColorStop(1, 'rgba(154,255,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -20) p.x = w + 20;
+        if (p.x > w + 20) p.x = -20;
+        if (p.y < -20) p.y = h + 20;
+        if (p.y > h + 20) p.y = -20;
+
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(154, 255, 0, ${p.a})`;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    draw();
+
+    window.addEventListener('mousemove', (e) => {
+      cursorGlow.style.left = e.clientX + 'px';
+      cursorGlow.style.top = e.clientY + 'px';
+    });
+  </script>
+</body>
+</html>
